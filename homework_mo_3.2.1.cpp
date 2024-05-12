@@ -25,9 +25,8 @@ T2 para_foreach(T1 begin, T1 end, T2(*ff)(T2))
 
     if (curr_size <= size)
     {
-        // должно возвращать значение вектора, на которое указывает интератор, а этот итератор находится в позиции begin
-        int a = *begin;
-        return ff(a);
+        std::for_each(begin, end, ff);
+        return 0;
     }
     // если иначе, то есть интервал больше единицы, то делим его пополам
     auto mid = begin;
