@@ -13,7 +13,7 @@
 #include <array>
 #include <numeric>
 #include <vector>
-
+/*
 template<typename T1, typename T2>
 T2 para_foreach(T1 begin, T1 end, T2(*ff)(T2))
 {
@@ -25,8 +25,7 @@ T2 para_foreach(T1 begin, T1 end, T2(*ff)(T2))
 
     if (curr_size <= size)
     {
-        std::for_each(begin, end, ff);
-        return 0;
+        T2 para_foreach(T1 begin, T1 end, T2 &&ff);
     }
     // если иначе, то есть интервал больше единицы, то делим его пополам
     auto mid = begin;
@@ -45,7 +44,42 @@ T2 para_foreach(T1 begin, T1 end, T2(*ff)(T2))
     // выходим из рекурсии, вызвав результат будущего
     return ft_res.get();
 }
-int Foo(int a)
+
+int Fn(int a)
+{
+    std::cout << a + 10 << std::endl;
+    return a + 10;
+}
+*/
+
+template <typename It, typename Fn>
+void parallel_for_each(It begin, It end, Fn&& function)
+{
+    const size_t block_size = 4;
+    size_t diff = static_cast<size_t>(std::distance(begin, end));
+
+    if (diff > 0)
+    {
+        size_t size = diff;
+
+        if (diff > block_size)
+        {
+            size = size / 2;
+            It endAs = begin + size;
+            std::future<void> q = std::async(std::launch::async, [begin, endAs, function]
+                { parallel_for_each(begin, endAs, function); });
+
+            q.wait();
+            parallel_for_each(endAs, end, function);
+        }
+        else
+        {
+            std::for_each(begin, end, function);
+        }
+    }
+}
+
+int Fn(int a)
 {
     std::cout << a + 10 << std::endl;
     return a + 10;
@@ -54,7 +88,7 @@ int Foo(int a)
 int main()
 {
     std::vector<int> V = { 0, 1, 2, 3 };
-    para_foreach(V.begin(), V.end(), Foo);
+    parallel_for_each(V.begin(), V.end(), Fn);
 
     return 0;
 }
